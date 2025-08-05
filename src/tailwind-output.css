@@ -1,9 +1,9 @@
 /*! tailwindcss v4.1.11 | MIT License | https://tailwindcss.com */
+.container {
+  width: 100%;
+}
 .flex {
   display: flex;
-}
-.flex-1 {
-  flex: 1;
 }
 .items-center {
   align-items: center;

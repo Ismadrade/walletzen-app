@@ -20,6 +20,8 @@ $myapp-theme: mat.m2-define-light-theme((
 ));
 
 @include mat.all-component-themes($myapp-theme);
+
+
 // :root {
 //   @include mat.toolbar-overrides((
 //     container-background-color: var(--mat-sys-primary-container),
@@ -58,3 +60,10 @@ body {
 
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+.content {
+  padding: 20px;
+  border-radius: 5px;
+  margin: -30px 34px 35px;
+  background-color: white;
+}
