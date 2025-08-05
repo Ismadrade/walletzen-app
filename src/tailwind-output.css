@@ -1,0 +1,13 @@
+/*! tailwindcss v4.1.11 | MIT License | https://tailwindcss.com */
+.flex {
+  display: flex;
+}
+.flex-1 {
+  flex: 1;
+}
+.items-center {
+  align-items: center;
+}
+.px-\[30px\] {
+  padding-inline: 30px;
+}
