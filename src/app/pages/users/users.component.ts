@@ -3,9 +3,9 @@ import { Component } from '@angular/core';
 @Component({
   selector: 'app-users',
   standalone: false,
-  templateUrl: './users.html',
+  templateUrl: './users.component.html',
   styles: ``
 })
-export class Users {
+export class UsersComponent {
 
 }

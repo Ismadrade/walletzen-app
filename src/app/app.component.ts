@@ -8,14 +8,20 @@ export const SHADOW_LIMIT = 100;
 
 @Component({
   selector: 'app-root',
-  templateUrl: './app.html',
+  templateUrl: './app.component.html',
   standalone: false,
   styleUrls: ['./app.component.scss']
 })
-export class App implements OnInit{
+export class AppComponent implements OnInit{
   public isSmallScreen = false;
   public popText = false;
   public applyShadow = false;
+
+  dataSource = MENU_ITEMS;
+
+  childrenAccessor = (node: MenuNode) => node.children ?? [];
+
+  hasChild = (_: number, node: MenuNode) => !!node.children && node.children.length > 0;
 
   constructor(private breakpointObserver: BreakpointObserver) { }
 
@@ -45,4 +51,26 @@ export class App implements OnInit{
   get sidenavMode() {
     return this.isSmallScreen ? 'over' : 'side';
   }
+}
+
+const MENU_ITEMS: MenuNode[] = [
+  {
+    name: 'Usuário',
+    children: [{name: 'Perfil', url: '/pages/users', icon: 'person'}],
+  },
+  {
+    name: 'Transações',
+    children: [
+      { name: 'Minhas Transações', icon: 'account_balance_wallet'},
+      { name: 'Nova Transação', icon: 'add_card'},
+    ],
+  },
+];
+
+
+interface MenuNode {
+  name: string;
+  children?: MenuNode[];
+  url?: string;
+  icon?: string;
 }

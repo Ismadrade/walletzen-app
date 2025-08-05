@@ -1,12 +1,12 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { Users } from './users';
-import { Profile } from './profile/profile';
+import { UsersComponent } from './users.component';
+import { ProfileComponent } from './profile/profile.component';
 
 const routes: Routes = [
   {
     path: '',
-    component: Users,
+    component: UsersComponent,
     pathMatch: 'prefix',
     children: [
       {
@@ -16,7 +16,7 @@ const routes: Routes = [
       },
       {
         path: 'profile',
-        component: Profile,
+        component: ProfileComponent,
       }
     ]
   }

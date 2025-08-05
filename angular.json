@@ -9,7 +9,9 @@
         "@schematics/angular:component": {
           "style": "scss",
           "skipTests": true,
-          "standalone": false
+          "standalone": false,
+          "name": "component",
+          "prefix": "app"
         },
         "@schematics/angular:directive": {
           "standalone": false
