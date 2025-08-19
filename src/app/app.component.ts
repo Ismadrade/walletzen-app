@@ -56,12 +56,12 @@ export class AppComponent implements OnInit{
 const MENU_ITEMS: MenuNode[] = [
   {
     name: 'Usuário',
-    children: [{name: 'Perfil', url: '/pages/users', icon: 'person'}],
+    children: [{name: 'Perfil', url: '/users', icon: 'person'}],
   },
   {
     name: 'Transações',
     children: [
-      { name: 'Minhas Transações', icon: 'account_balance_wallet'},
+      { name: 'Minhas Transações', url: '/transactions', icon: 'account_balance_wallet'},
       { name: 'Nova Transação', icon: 'add_card'},
     ],
   },
