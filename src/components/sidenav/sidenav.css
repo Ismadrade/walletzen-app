@@ -1,0 +1,17 @@
+.sidenav {
+  width: 200px;
+  background: #1a1a1a;
+  height: 100vh;
+  padding: 20px;
+  color: white;
+}
+
+.sidenav ul {
+  list-style: none;
+  padding: 0;
+}
+
+.sidenav li {
+  margin: 15px 0;
+  cursor: pointer;
+}
