@@ -28,7 +28,7 @@ export default function Sidebar() {
       className={`
         ${open ? "w-64" : "w-20"}
         ${darkMode ? "bg-gray-900 text-white" : "bg-white text-gray-700"}
-        h-screen  
+        h-auto  
         shadow-lg 
         p-4 
         flex flex-col 
@@ -87,14 +87,14 @@ export default function Sidebar() {
         `}
       >
         <Search className="opacity-70" />
-        {open && <input className="bg-transparent outline-none" placeholder="Search..." />}
+        {open && <input className={`bg-transparent outline-none ${darkMode ? "placeholder-gray-400" : "placeholder-gray-800"} `} placeholder="Search..." />}
       </div>
 
       {/* Menu */}
       <nav className="flex flex-col gap-2 flex-1">
 
         <Link to="/dashboard"><MenuItem icon={<Dashboard />} open={open} darkMode={darkMode}>Dashboard</MenuItem></Link>
-        <MenuItem icon={<MonetizationOn />} open={open} darkMode={darkMode}>Revenue</MenuItem>
+        <Link to="/financas"><MenuItem icon={<MonetizationOn />} open={open} darkMode={darkMode}>Finanças</MenuItem></Link>
         <MenuItem icon={<Notifications />} open={open} darkMode={darkMode}>Notifications</MenuItem>
         <MenuItem icon={<BarChart />} open={open} darkMode={darkMode}>Analytics</MenuItem>
         <MenuItem icon={<Favorite />} open={open} darkMode={darkMode}>Likes</MenuItem>
