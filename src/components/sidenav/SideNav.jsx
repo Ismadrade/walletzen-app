@@ -1,6 +1,7 @@
 import './sidenav.css';
 
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useTheme } from "../../context/useTheme";
 import {
   Dashboard,
@@ -39,13 +40,13 @@ export default function Sidebar() {
       {/* Header */}
       <div className="flex items-center gap-3 mb-8">
         <div className="bg-indigo-500 text-white font-bold px-3 py-2 rounded-lg">
-          CL
+          IA
         </div>
 
         {open && (
           <div>
-            <h2 className="font-semibold text-lg">Codinglab</h2>
-            <p className="text-sm opacity-70">Web developer</p>
+            <h2 className="font-semibold text-lg">Ismael Andrade</h2>
+            <p className="text-sm opacity-70">Java Senior Engineer</p>
           </div>
         )}
 
@@ -92,7 +93,7 @@ export default function Sidebar() {
       {/* Menu */}
       <nav className="flex flex-col gap-2 flex-1">
 
-        <MenuItem icon={<Dashboard />} open={open} darkMode={darkMode}>Dashboard</MenuItem>
+        <Link to="/dashboard"><MenuItem icon={<Dashboard />} open={open} darkMode={darkMode}>Dashboard</MenuItem></Link>
         <MenuItem icon={<MonetizationOn />} open={open} darkMode={darkMode}>Revenue</MenuItem>
         <MenuItem icon={<Notifications />} open={open} darkMode={darkMode}>Notifications</MenuItem>
         <MenuItem icon={<BarChart />} open={open} darkMode={darkMode}>Analytics</MenuItem>
