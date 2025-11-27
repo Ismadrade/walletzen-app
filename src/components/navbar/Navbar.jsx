@@ -1,4 +1,5 @@
 import './navbar.css';
+import { Link } from "react-router-dom";
 
 import { Logout } from "@mui/icons-material";
 import { useTheme } from "../../context/useTheme";
@@ -26,7 +27,9 @@ export default function Navbar() {
           
         `}
       >
-        MyApp
+        <Link to="/" className="w-full h-full block">
+          WalletZen
+        </Link>
       </div>
 
       {/* Ícone estilizado */}
