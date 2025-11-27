@@ -1,6 +1,7 @@
 import './sidenav.css';
 
 import { useState } from "react";
+import { useTheme } from "../../context/useTheme";
 import {
   Dashboard,
   Notifications,
@@ -17,10 +18,9 @@ import {
 
 export default function Sidebar() {
   const [open, setOpen] = useState(true);
-  const [darkMode, setDarkMode] = useState(false);
+  const { darkMode, toggleDark } = useTheme();
 
   const toggleSidebar = () => setOpen(!open);
-  const toggleDark = () => setDarkMode(!darkMode);
 
   return (
     <div

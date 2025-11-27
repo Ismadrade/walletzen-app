@@ -1,26 +1,45 @@
 import './navbar.css';
 
-import { KeyboardArrowLeft } from "@mui/icons-material";
+import { Logout } from "@mui/icons-material";
+import { useTheme } from "../../context/useTheme";
 
 export default function Navbar() {
+  const { darkMode } = useTheme();
+
   return (
-    <nav className="w-full flex items-center justify-between px-4 py-3 bg-gray-100 border-b border-gray-300">
+    <nav 
+      className={`
+        w-full 
+        flex items-center justify-between 
+        px-4 py-3 
+        ${darkMode ? "bg-gray-900 border-b border-gray-700" : "bg-white border-b border-gray-300"} 
+        
+      `}
+    >
       {/* Logo */}
-      <div className="text-xl font-semibold text-gray-800">
+      <div 
+        className={`
+          pl-5 
+          text-xl 
+          font-semibold 
+          ${darkMode ? "text-white" : "text-gray-800"} 
+          
+        `}
+      >
         MyApp
       </div>
 
       {/* Ícone estilizado */}
       <button
-        className="
-          flex items-center justify-center 
-          bg-white border border-gray-300
-          rounded-full 
-          hover:bg-gray-200 transition
-          p-2
-        "
+        className={`
+            flex items-center justify-center
+            cursor-pointer
+            p-2
+            ${darkMode ? "text-white" : "text-gray-800"} 
+        `}
+        
       >
-        <KeyboardArrowLeft style={{ fontSize: "20px" }} />
+        <Logout style={{ fontSize: "20px" }} />
       </button>
     </nav>
   );
