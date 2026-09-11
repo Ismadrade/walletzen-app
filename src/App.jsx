@@ -14,7 +14,7 @@ export default function App() {
 
         <div className="flex-1 flex flex-col min-h-screen">
           <Navbar />
-          <main className="p-6">
+          <main className="p-10">
             <PageHeader />
             <Routes>
               <Route path="/" element={<Home />} />
