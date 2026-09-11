@@ -1,30 +1,31 @@
-import './navbar.css';
 import { Link } from "react-router-dom";
 
 import { Logout } from "@mui/icons-material";
 import { useTheme } from "../../context/useTheme";
+import { useAuth } from "../../auth/useAuth";
 
 export default function Navbar() {
   const { darkMode } = useTheme();
+  const { logout } = useAuth();
 
   return (
-    <nav 
+    <nav
       className={`
-        w-full 
-        flex items-center justify-between 
-        px-4 py-3 
-        ${darkMode ? "bg-gray-900 border-b border-gray-700" : "bg-white border-b border-gray-300"} 
-        
+        w-full
+        flex items-center justify-between
+        px-4 py-3
+        ${darkMode ? "bg-gray-900 border-b border-gray-700" : "bg-white border-b border-gray-300"}
+
       `}
     >
       {/* Logo */}
-      <div 
+      <div
         className={`
-          pl-5 
-          text-xl 
-          font-semibold 
-          ${darkMode ? "text-white" : "text-gray-800"} 
-          
+          pl-5
+          text-xl
+          font-semibold
+          ${darkMode ? "text-white" : "text-gray-800"}
+
         `}
       >
         <Link to="/" className="w-full h-full block">
@@ -32,19 +33,21 @@ export default function Navbar() {
         </Link>
       </div>
 
-      {/* Ícone estilizado */}
+      {/* Sair */}
       <button
+        onClick={logout}
+        title="Sair"
+        aria-label="Sair"
         className={`
             flex items-center justify-center
             cursor-pointer
             p-2
-            ${darkMode ? "text-white" : "text-gray-800"} 
+            ${darkMode ? "text-white" : "text-gray-800"}
         `}
-        
+
       >
         <Logout style={{ fontSize: "20px" }} />
       </button>
     </nav>
   );
 }
-

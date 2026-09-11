@@ -1,109 +1,100 @@
-import './sidenav.css';
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useTheme } from "../../context/useTheme";
+import { useAuth } from "../../auth/useAuth";
+import { useMe } from "../../user/useMe";
 import {
   Dashboard,
-  Notifications,
-  BarChart,
-  Favorite,
-  AccountBalanceWallet,
   MonetizationOn,
   Logout,
-  Search,
   DarkMode,
   KeyboardArrowLeft,
   KeyboardArrowRight
 } from "@mui/icons-material";
 
+function initialsOf(name) {
+  const parts = (name ?? "").trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  return (parts[0][0] + (parts[1]?.[0] ?? "")).toUpperCase();
+}
+
 export default function Sidebar() {
   const [open, setOpen] = useState(true);
   const { darkMode, toggleDark } = useTheme();
+  const { claims, logout } = useAuth();
+  const { me } = useMe();
 
   const toggleSidebar = () => setOpen(!open);
+
+  // `me` vem do wz-user; o token cobre o caso de login sem cadastro (usuário seed).
+  const displayName = me?.name ?? claims?.name ?? claims?.preferred_username ?? "Usuário";
+  const displayEmail = me?.email ?? claims?.email ?? "";
 
   return (
     <div
       className={`
         ${open ? "w-64" : "w-20"}
         ${darkMode ? "bg-gray-900 text-white" : "bg-white text-gray-700"}
-        h-auto  
-        shadow-lg 
-        p-4 
-        flex flex-col 
-        transition-all 
-        duration-300 
+        relative
+        h-auto
+        shadow-lg
+        p-4
+        flex flex-col
+        transition-all
+        duration-300
       `}
     >
 
       {/* Header */}
       <div className="flex items-center gap-3 mb-8">
-        <div className="bg-indigo-500 text-white font-bold px-3 py-2 rounded-lg">
-          IA
+        <div className="bg-indigo-500 text-white font-bold px-3 py-2 rounded-lg shrink-0">
+          {initialsOf(displayName)}
         </div>
 
         {open && (
-          <div>
-            <h2 className="font-semibold text-lg">Ismael Andrade</h2>
-            <p className="text-sm opacity-70">Java Senior Engineer</p>
+          <div className="min-w-0">
+            <h2 className="font-semibold text-lg truncate" title={displayName}>{displayName}</h2>
+            <p className="text-sm opacity-70 truncate" title={displayEmail}>{displayEmail}</p>
           </div>
         )}
-
-        {/* Collapse button */}
-        <button
-          onClick={toggleSidebar}
-          className={`
-            absolute
-            top-6
-            z-50
-            bg-indigo-500 
-            text-white 
-            p-[0px]
-            rounded-full 
-            shadow-lg 
-            hover:bg-gray-800
-            transition-all 
-            duration-300
-            ${open ? "left-[240px]" : "left-[68px]"}
-          `}
-        >
-          {open ? (
-            <KeyboardArrowLeft className="text-base" />
-          ) : (
-            <KeyboardArrowRight className="text-base" />
-          )}
-        </button>
-
-
       </div>
 
-      {/* Search */}
-      <div
-        className={`
-          flex items-center gap-3 
-          p-3 rounded-xl mb-6
-          ${darkMode ? "bg-gray-800" : "bg-gray-100"}
-        `}
+      {/* Collapse button — preso à borda direita da barra, não à viewport */}
+      <button
+        onClick={toggleSidebar}
+        aria-label={open ? "Recolher menu" : "Expandir menu"}
+        className="
+          absolute
+          top-6
+          -right-3
+          z-50
+          bg-indigo-500
+          text-white
+          p-[0px]
+          rounded-full
+          shadow-lg
+          hover:bg-gray-800
+          transition-all
+          duration-300
+        "
       >
-        <Search className="opacity-70" />
-        {open && <input className={`bg-transparent outline-none ${darkMode ? "placeholder-gray-400" : "placeholder-gray-800"} `} placeholder="Search..." />}
-      </div>
+        {open ? (
+          <KeyboardArrowLeft className="text-base" />
+        ) : (
+          <KeyboardArrowRight className="text-base" />
+        )}
+      </button>
 
       {/* Menu */}
       <nav className="flex flex-col gap-2 flex-1">
 
         <Link to="/dashboard"><MenuItem icon={<Dashboard />} open={open} darkMode={darkMode}>Dashboard</MenuItem></Link>
         <Link to="/financas"><MenuItem icon={<MonetizationOn />} open={open} darkMode={darkMode}>Finanças</MenuItem></Link>
-        <MenuItem icon={<Notifications />} open={open} darkMode={darkMode}>Notifications</MenuItem>
-        <MenuItem icon={<BarChart />} open={open} darkMode={darkMode}>Analytics</MenuItem>
-        <MenuItem icon={<Favorite />} open={open} darkMode={darkMode}>Likes</MenuItem>
-        <MenuItem icon={<AccountBalanceWallet />} open={open} darkMode={darkMode}>Wallets</MenuItem>
 
       </nav>
 
       {/* Logout */}
-      <MenuItem icon={<Logout />} open={open} darkMode={darkMode}>Logout</MenuItem>
+      <MenuItem icon={<Logout />} open={open} darkMode={darkMode} onClick={logout}>Logout</MenuItem>
 
       {/* Dark mode toggle */}
       <div
@@ -136,9 +127,10 @@ export default function Sidebar() {
   );
 }
 
-function MenuItem({ icon, children, open, darkMode }) {
+function MenuItem({ icon, children, open, darkMode, onClick }) {
   return (
     <div
+      onClick={onClick}
       className={`
         flex items-center gap-3
         p-3 rounded-xl
@@ -152,4 +144,3 @@ function MenuItem({ icon, children, open, darkMode }) {
     </div>
   );
 }
-
