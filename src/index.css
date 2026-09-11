@@ -1,1 +1,5 @@
 @import "tailwindcss";
+
+/* `dark:` passa a seguir a classe .dark no <html> (posta pelo ThemeProvider)
+   em vez da preferência do sistema operacional. */
+@custom-variant dark (&:where(.dark, .dark *));
