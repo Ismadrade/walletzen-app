@@ -6,7 +6,8 @@ const MONTHS = Array.from({ length: 12 }, (_, index) => {
 });
 
 const CURRENT_YEAR = new Date().getFullYear();
-const YEARS = Array.from({ length: 5 }, (_, index) => CURRENT_YEAR - index);
+// inclui o ano que vem: dá para lançar receitas e despesas futuras
+const YEARS = Array.from({ length: 6 }, (_, index) => CURRENT_YEAR + 1 - index);
 
 /**
  * Filtro de período da listagem. O backend só aceita `month` acompanhado de

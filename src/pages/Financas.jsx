@@ -9,6 +9,7 @@ import { ptBR } from "@mui/x-data-grid/locales";
 
 import { listByUser } from "../api/transactions";
 import { useMe } from "../user/useMe";
+import { useToast } from "../toast/useToast";
 import { formatCurrency, formatDate } from "../utils/format";
 import PeriodFilter from "../components/financas/PeriodFilter";
 import TransactionDialog from "../components/financas/TransactionDialog";
@@ -23,8 +24,16 @@ const CLOSED = { open: false, key: 0, transaction: null };
 const opening = (transaction) => (state) => ({ open: true, key: state.key + 1, transaction });
 const closing = (state) => ({ ...state, open: false });
 
+/** A data "yyyy-MM-dd" cai dentro do período filtrado? Ano/mês vazios = "Todos". */
+function isInPeriod(isoDate, { year, month }) {
+  if (!isoDate || year === "") return true;
+  const [dateYear, dateMonth] = isoDate.split("-").map(Number);
+  return dateYear === Number(year) && (month === "" || dateMonth === Number(month));
+}
+
 export default function Financas() {
   const { me, status } = useMe();
+  const toast = useToast();
   const theme = useMuiTheme();
 
   const [period, setPeriod] = useState({ year: now.getFullYear(), month: now.getMonth() + 1 });
@@ -39,6 +48,20 @@ export default function Financas() {
   const loading = data.key !== requestKey;
 
   const reload = () => setReloadToken((token) => token + 1);
+
+  const handleSaved = ({ transaction, created }) => {
+    reload();
+    const verb = created ? "criado" : "atualizado";
+    // se a data escolhida está fora do filtro, a linha não aparece — o aviso explica o porquê
+    toast.success(isInPeriod(transaction?.transactionDate, period)
+      ? `Lançamento ${verb} com sucesso.`
+      : `Lançamento ${verb} em ${formatDate(transaction.transactionDate)}, fora do período filtrado.`);
+  };
+
+  const handleDeleted = () => {
+    reload();
+    toast.success("Lançamento excluído com sucesso.");
+  };
 
   useEffect(() => {
     if (!me?.id) return undefined;
@@ -70,7 +93,7 @@ export default function Financas() {
 
   const columns = useMemo(() => [
     {
-      field: "createdAt",
+      field: "transactionDate",
       headerName: "Data",
       width: 110,
       valueFormatter: (value) => formatDate(value),
@@ -220,7 +243,7 @@ export default function Financas() {
         open={editor.open}
         transaction={editor.transaction}
         onClose={() => setEditor(closing)}
-        onSaved={reload}
+        onSaved={handleSaved}
       />
 
       <DeleteTransactionDialog
@@ -228,7 +251,7 @@ export default function Financas() {
         open={removal.open}
         transaction={removal.transaction}
         onClose={() => setRemoval(closing)}
-        onDeleted={reload}
+        onDeleted={handleDeleted}
       />
     </Paper>
   );
