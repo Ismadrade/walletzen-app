@@ -46,6 +46,7 @@ export default function TransactionDialog({ open, transaction, onClose, onSaved 
   const [error, setError] = useState(null);
 
   const amountIsValid = form.cents > 0;
+  const descriptionIsValid = form.description.trim() !== "";
   const dateIsValid = Boolean(form.date?.isValid());
   const changed = form.transactionType !== initial.transactionType
     || form.cents !== initial.cents
@@ -59,12 +60,12 @@ export default function TransactionDialog({ open, transaction, onClose, onSaved 
 
   const submit = async (event) => {
     event.preventDefault();
-    if (!amountIsValid || !dateIsValid) return;
+    if (!amountIsValid || !dateIsValid || !descriptionIsValid) return;
 
     const body = {
       transactionType: form.transactionType,
       amount: form.cents / 100,
-      description: form.description,
+      description: form.description.trim(),
       transactionDate: form.date.format(ISO_DATE),
     };
 
@@ -125,6 +126,9 @@ export default function TransactionDialog({ open, transaction, onClose, onSaved 
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
               disabled={saving}
+              required
+              // mesmo limite do varchar(255) do banco / @Size do backend
+              slotProps={{ htmlInput: { maxLength: 255 } }}
             />
           </Stack>
         </DialogContent>
@@ -134,7 +138,7 @@ export default function TransactionDialog({ open, transaction, onClose, onSaved 
           <Button
             type="submit"
             variant="contained"
-            disabled={saving || !amountIsValid || !dateIsValid || (editing && !changed)}
+            disabled={saving || !amountIsValid || !dateIsValid || !descriptionIsValid || (editing && !changed)}
           >
             {saving ? "Salvando…" : "Salvar"}
           </Button>
