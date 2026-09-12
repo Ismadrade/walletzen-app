@@ -131,7 +131,7 @@ export default function Financas() {
           disabled={loading}
         />
         {/* ml:auto mantém o botão à direita mesmo quando quebra de linha */}
-        <Button variant="contained" sx={{ ml: "auto" }} onClick={() => setDialogOpen(true)}>
+        <Button variant="contained" sx={{ ml: "auto", height: 40 }} onClick={() => setDialogOpen(true)}>
           Novo lançamento
         </Button>
       </Box>

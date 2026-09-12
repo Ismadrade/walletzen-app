@@ -20,7 +20,7 @@ export default function PeriodFilter({ year, month, onChange, disabled }) {
   };
 
   return (
-    <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", alignItems: "center" }}>
+    <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", alignItems: "flex-start" }}>
       <TextField
         select
         size="small"
@@ -28,6 +28,7 @@ export default function PeriodFilter({ year, month, onChange, disabled }) {
         value={year}
         onChange={handleYear}
         disabled={disabled}
+        helperText=" "
         sx={{ minWidth: 130 }}
       >
         <MenuItem value="">Todos</MenuItem>
@@ -53,10 +54,10 @@ export default function PeriodFilter({ year, month, onChange, disabled }) {
       </TextField>
 
       <Button
-        size="small"
+        variant="contained"
         onClick={() => onChange({ year: "", month: "" })}
         disabled={disabled || (year === "" && month === "")}
-        sx={{ alignSelf: "flex-start", mt: 0.5 }}
+        sx={{ height: 40 }}
       >
         Limpar
       </Button>
