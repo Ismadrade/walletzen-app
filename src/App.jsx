@@ -12,9 +12,10 @@ export default function App() {
       <div className="flex min-h-screen bg-white text-gray-900 dark:bg-gray-950 dark:text-gray-100">
         <SideNav />
 
-        <div className="flex-1 flex flex-col min-h-screen">
+        {/* min-w-0: sem ele o flex item não encolhe abaixo da largura da tabela e a página inteira rola para o lado */}
+        <div className="flex-1 flex flex-col min-h-screen min-w-0">
           <Navbar />
-          <main className="p-10">
+          <main className="p-4 md:p-10">
             <PageHeader />
             <Routes>
               <Route path="/" element={<Navigate to="/financas" replace />} />
