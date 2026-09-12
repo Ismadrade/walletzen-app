@@ -18,3 +18,16 @@ export function create({ transactionType, amount, description }) {
     body: { transactionType, amount, description },
   });
 }
+
+/** Mesmo corpo do `create`; o backend só aceita se quem chama for o dono (ou ADMIN). */
+export function update(id, { transactionType, amount, description }) {
+  return request(`/financial/transactions/${id}`, {
+    method: "PUT",
+    body: { transactionType, amount, description },
+  });
+}
+
+/** Exclusão lógica no backend (`record_status = false`); responde 204. */
+export function remove(id) {
+  return request(`/financial/transactions/${id}`, { method: "DELETE" });
+}
