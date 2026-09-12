@@ -1,17 +1,25 @@
 import { useState } from "react";
+import dayjs from "dayjs";
 import {
   Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle,
   MenuItem, Stack, TextField,
 } from "@mui/material";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 
 import { create, update } from "../../api/transactions";
 import CurrencyField from "./CurrencyField";
 
+// formato do LocalDate no backend
+const ISO_DATE = "YYYY-MM-DD";
+
 function initialForm(transaction) {
-  if (!transaction) return { transactionType: "EXPENSE", cents: 0, description: "" };
+  if (!transaction) {
+    return { transactionType: "EXPENSE", cents: 0, date: dayjs().startOf("day"), description: "" };
+  }
   return {
     transactionType: transaction.transactionType,
     cents: Math.round(Number(transaction.amount) * 100),
+    date: dayjs(transaction.transactionDate),
     description: transaction.description ?? "",
   };
 }
@@ -28,6 +36,7 @@ function messageFor(error) {
 /**
  * Cria (sem `transaction`) ou edita (com `transaction`) um lançamento.
  * O formulário é inicializado só na montagem — o pai troca a `key` a cada abertura.
+ * Em caso de sucesso chama `onSaved({ transaction, created })` com o lançamento devolvido pela API.
  */
 export default function TransactionDialog({ open, transaction, onClose, onSaved }) {
   const editing = Boolean(transaction);
@@ -37,9 +46,12 @@ export default function TransactionDialog({ open, transaction, onClose, onSaved 
   const [error, setError] = useState(null);
 
   const amountIsValid = form.cents > 0;
+  const dateIsValid = Boolean(form.date?.isValid());
   const changed = form.transactionType !== initial.transactionType
     || form.cents !== initial.cents
-    || form.description !== initial.description;
+    || form.description !== initial.description
+    || !dateIsValid
+    || form.date.format(ISO_DATE) !== initial.date.format(ISO_DATE);
 
   const close = () => {
     if (!saving) onClose();
@@ -47,20 +59,21 @@ export default function TransactionDialog({ open, transaction, onClose, onSaved 
 
   const submit = async (event) => {
     event.preventDefault();
-    if (!amountIsValid) return;
+    if (!amountIsValid || !dateIsValid) return;
 
     const body = {
       transactionType: form.transactionType,
       amount: form.cents / 100,
       description: form.description,
+      transactionDate: form.date.format(ISO_DATE),
     };
 
     setSaving(true);
     setError(null);
     try {
       // sem userId: o backend resolve o dono pelo token
-      await (editing ? update(transaction.id, body) : create(body));
-      onSaved();
+      const saved = await (editing ? update(transaction.id, body) : create(body));
+      onSaved({ transaction: saved, created: !editing });
       onClose();
     } catch (apiError) {
       setError(apiError);
@@ -98,6 +111,15 @@ export default function TransactionDialog({ open, transaction, onClose, onSaved 
               autoFocus={editing}
             />
 
+            <DatePicker
+              label="Data"
+              value={form.date}
+              onChange={(date) => setForm({ ...form, date })}
+              format="DD/MM/YYYY"
+              disabled={saving}
+              slotProps={{ textField: { required: true, fullWidth: true } }}
+            />
+
             <TextField
               label="Descrição"
               value={form.description}
@@ -109,7 +131,11 @@ export default function TransactionDialog({ open, transaction, onClose, onSaved 
 
         <DialogActions sx={{ px: 3, pb: 2 }}>
           <Button onClick={close} disabled={saving}>Cancelar</Button>
-          <Button type="submit" variant="contained" disabled={saving || !amountIsValid || (editing && !changed)}>
+          <Button
+            type="submit"
+            variant="contained"
+            disabled={saving || !amountIsValid || !dateIsValid || (editing && !changed)}
+          >
             {saving ? "Salvando…" : "Salvar"}
           </Button>
         </DialogActions>

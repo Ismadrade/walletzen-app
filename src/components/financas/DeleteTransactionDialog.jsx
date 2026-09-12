@@ -63,7 +63,7 @@ export default function DeleteTransactionDialog({ open, transaction, onClose, on
           <Box sx={{ minWidth: 0 }}>
             <Typography noWrap fontWeight={500}>{transaction.description || "Sem descrição"}</Typography>
             <Typography variant="body2" color="text.secondary">
-              {formatDate(transaction.createdAt)} · {income ? "Receita" : "Despesa"}
+              {formatDate(transaction.transactionDate)} · {income ? "Receita" : "Despesa"}
             </Typography>
           </Box>
           <Typography fontWeight={500} color={income ? "success.main" : "error.main"} sx={{ whiteSpace: "nowrap" }}>
