@@ -5,6 +5,17 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>walletzen-app</title>
+    <script>
+      // Aplica o tema salvo antes do React carregar, para o reload não piscar no claro.
+      // A chave é a mesma do ThemeProvider.
+      try {
+        if (localStorage.getItem("walletzen:theme") === "dark") {
+          document.documentElement.classList.add("dark");
+        }
+      } catch {
+        // storage indisponível: fica no claro
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
