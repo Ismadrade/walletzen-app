@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  Alert, Box, Button, Chip, CircularProgress, Paper, Typography,
+  Alert, Box, Button, Chip, CircularProgress, IconButton, Paper, Tooltip, Typography,
   useTheme as useMuiTheme,
 } from "@mui/material";
+import { DeleteOutline, EditOutlined } from "@mui/icons-material";
 import { DataGrid } from "@mui/x-data-grid";
 import { ptBR } from "@mui/x-data-grid/locales";
 
@@ -10,10 +11,17 @@ import { listByUser } from "../api/transactions";
 import { useMe } from "../user/useMe";
 import { formatCurrency, formatDate } from "../utils/format";
 import PeriodFilter from "../components/financas/PeriodFilter";
-import NewTransactionDialog from "../components/financas/NewTransactionDialog";
+import TransactionDialog from "../components/financas/TransactionDialog";
+import DeleteTransactionDialog from "../components/financas/DeleteTransactionDialog";
 
 const dataGridLocale = ptBR.components.MuiDataGrid.defaultProps.localeText;
 const now = new Date();
+
+// Estado dos modais: `key` muda a cada abertura para remontar o modal com o
+// formulário limpo; ao fechar, só `open` vira false e a animação de saída acontece.
+const CLOSED = { open: false, key: 0, transaction: null };
+const opening = (transaction) => (state) => ({ open: true, key: state.key + 1, transaction });
+const closing = (state) => ({ ...state, open: false });
 
 export default function Financas() {
   const { me, status } = useMe();
@@ -22,7 +30,8 @@ export default function Financas() {
   const [period, setPeriod] = useState({ year: now.getFullYear(), month: now.getMonth() + 1 });
   const [reloadToken, setReloadToken] = useState(0);
   const [data, setData] = useState({ key: null, error: null, rows: [] });
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editor, setEditor] = useState(CLOSED);
+  const [removal, setRemoval] = useState(CLOSED);
 
   // `loading` é derivado: enquanto o resultado guardado não for o do pedido atual,
   // a tela está carregando. Evita setState sincrono dentro do efeito.
@@ -99,6 +108,40 @@ export default function Financas() {
         </span>
       ),
     },
+    {
+      field: "actions",
+      headerName: "",
+      width: 100,
+      display: "flex",
+      align: "center",
+      sortable: false,
+      filterable: false,
+      disableColumnMenu: true,
+      renderCell: ({ row }) => (
+        <Box sx={{ display: "flex", gap: 0.5 }}>
+          <Tooltip title="Editar">
+            <IconButton
+              size="small"
+              aria-label="Editar lançamento"
+              onClick={() => setEditor(opening(row))}
+              sx={{ "&:hover": { color: "primary.main" } }}
+            >
+              <EditOutlined fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Excluir">
+            <IconButton
+              size="small"
+              aria-label="Excluir lançamento"
+              onClick={() => setRemoval(opening(row))}
+              sx={{ "&:hover": { color: "error.main" } }}
+            >
+              <DeleteOutline fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      ),
+    },
   ], [theme]);
 
   if (status === "no-wallet") {
@@ -131,7 +174,7 @@ export default function Financas() {
           disabled={loading}
         />
         {/* ml:auto mantém o botão à direita mesmo quando quebra de linha */}
-        <Button variant="contained" sx={{ ml: "auto", height: 40 }} onClick={() => setDialogOpen(true)}>
+        <Button variant="contained" sx={{ ml: "auto", height: 40 }} onClick={() => setEditor(opening(null))}>
           Novo lançamento
         </Button>
       </Box>
@@ -172,10 +215,20 @@ export default function Financas() {
         />
       )}
 
-      <NewTransactionDialog
-        open={dialogOpen}
-        onClose={() => setDialogOpen(false)}
-        onCreated={reload}
+      <TransactionDialog
+        key={`editor-${editor.key}`}
+        open={editor.open}
+        transaction={editor.transaction}
+        onClose={() => setEditor(closing)}
+        onSaved={reload}
+      />
+
+      <DeleteTransactionDialog
+        key={`removal-${removal.key}`}
+        open={removal.open}
+        transaction={removal.transaction}
+        onClose={() => setRemoval(closing)}
+        onDeleted={reload}
       />
     </Paper>
   );
