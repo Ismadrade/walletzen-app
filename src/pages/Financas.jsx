@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  Alert, Box, Button, Chip, CircularProgress, IconButton, Paper, Tooltip, Typography,
-  useTheme as useMuiTheme,
+  Alert, Box, Button, Chip, IconButton, Paper, Tooltip, Typography,
+  useMediaQuery, useTheme as useMuiTheme,
 } from "@mui/material";
 import { DeleteOutline, EditOutlined } from "@mui/icons-material";
 import { DataGrid } from "@mui/x-data-grid";
 import { ptBR } from "@mui/x-data-grid/locales";
 
-import { listByUser } from "../api/transactions";
+import { listByUser, summaryByUser } from "../api/transactions";
 import { useMe } from "../user/useMe";
 import { useToast } from "../toast/useToast";
 import { formatCurrency, formatDate } from "../utils/format";
@@ -35,19 +35,32 @@ export default function Financas() {
   const { me, status } = useMe();
   const toast = useToast();
   const theme = useMuiTheme();
+  // no celular a coluna Tipo sai: a cor do valor já diz se é receita ou despesa
+  const compact = useMediaQuery(theme.breakpoints.down("sm"));
 
   const [period, setPeriod] = useState({ year: now.getFullYear(), month: now.getMonth() + 1 });
+  const [pagination, setPagination] = useState({ page: 0, pageSize: 10 });
   const [reloadToken, setReloadToken] = useState(0);
-  const [data, setData] = useState({ key: null, error: null, rows: [] });
+  const [list, setList] = useState({ key: null, error: null, rows: [], total: 0 });
+  const [summary, setSummary] = useState({ key: null, error: null, value: null });
   const [editor, setEditor] = useState(CLOSED);
   const [removal, setRemoval] = useState(CLOSED);
 
   // `loading` é derivado: enquanto o resultado guardado não for o do pedido atual,
   // a tela está carregando. Evita setState sincrono dentro do efeito.
-  const requestKey = `${me?.id}|${period.year}|${period.month}|${reloadToken}`;
-  const loading = data.key !== requestKey;
+  // Os totais dependem só do período; a lista, também da página.
+  const periodKey = `${me?.id}|${period.year}|${period.month}|${reloadToken}`;
+  const listKey = `${periodKey}|${pagination.page}|${pagination.pageSize}`;
+  const listLoading = list.key !== listKey;
+  const summaryLoading = summary.key !== periodKey;
 
   const reload = () => setReloadToken((token) => token + 1);
+
+  // outro período = outra lista: volta para a primeira página
+  const changePeriod = (next) => {
+    setPeriod(next);
+    setPagination((current) => ({ ...current, page: 0 }));
+  };
 
   const handleSaved = ({ transaction, created }) => {
     reload();
@@ -67,38 +80,49 @@ export default function Financas() {
     if (!me?.id) return undefined;
 
     let cancelled = false;
-    listByUser(me.id, { year: period.year, month: period.month })
+    listByUser(me.id, {
+      year: period.year, month: period.month, page: pagination.page, size: pagination.pageSize,
+    })
       .then((page) => {
-        if (!cancelled) setData({ key: requestKey, error: null, rows: page.content ?? [] });
+        if (cancelled) return;
+        const rows = page.content ?? [];
+        // a última linha da página foi excluída: volta uma página em vez de mostrar uma vazia
+        if (rows.length === 0 && pagination.page > 0) {
+          setPagination((current) => ({ ...current, page: current.page - 1 }));
+          return;
+        }
+        setList({ key: listKey, error: null, rows, total: page.totalElements ?? 0 });
       })
       .catch((error) => {
-        if (!cancelled) setData({ key: requestKey, error, rows: [] });
+        if (!cancelled) setList({ key: listKey, error, rows: [], total: 0 });
       });
 
     return () => { cancelled = true; };
-  }, [me?.id, period.year, period.month, requestKey]);
+  }, [me?.id, period.year, period.month, pagination.page, pagination.pageSize, listKey]);
 
-  const { total, averageExpense } = useMemo(() => {
-    const expenses = data.rows.filter((row) => row.transactionType === "EXPENSE");
-    return {
-      total: data.rows.reduce(
-        (acc, row) => (row.transactionType === "INCOME" ? acc + Number(row.amount) : acc - Number(row.amount)),
-        0,
-      ),
-      averageExpense: expenses.length
-        ? expenses.reduce((acc, row) => acc + Number(row.amount), 0) / expenses.length
-        : 0,
-    };
-  }, [data.rows]);
+  useEffect(() => {
+    if (!me?.id) return undefined;
+
+    let cancelled = false;
+    summaryByUser(me.id, { year: period.year, month: period.month })
+      .then((value) => {
+        if (!cancelled) setSummary({ key: periodKey, error: null, value });
+      })
+      .catch((error) => {
+        if (!cancelled) setSummary({ key: periodKey, error, value: null });
+      });
+
+    return () => { cancelled = true; };
+  }, [me?.id, period.year, period.month, periodKey]);
 
   const columns = useMemo(() => [
     {
       field: "transactionDate",
       headerName: "Data",
-      width: 110,
+      width: compact ? 96 : 110,
       valueFormatter: (value) => formatDate(value),
     },
-    { field: "description", headerName: "Descrição", flex: 1, minWidth: 160 },
+    { field: "description", headerName: "Descrição", flex: 1, minWidth: compact ? 120 : 160 },
     {
       field: "transactionType",
       headerName: "Tipo",
@@ -115,7 +139,7 @@ export default function Financas() {
     {
       field: "amount",
       headerName: "Valor",
-      width: 150,
+      width: compact ? 120 : 150,
       type: "number",
       align: "right",
       headerAlign: "right",
@@ -134,12 +158,9 @@ export default function Financas() {
     {
       field: "actions",
       headerName: "",
-      width: 100,
+      width: 96,
       display: "flex",
       align: "center",
-      sortable: false,
-      filterable: false,
-      disableColumnMenu: true,
       renderCell: ({ row }) => (
         <Box sx={{ display: "flex", gap: 0.5 }}>
           <Tooltip title="Editar">
@@ -165,7 +186,14 @@ export default function Financas() {
         </Box>
       ),
     },
-  ], [theme]);
+    // ordenar/filtrar pelo menu da coluna só agiria na página carregada — enganoso com
+    // paginação no servidor, que já ordena por data (mais recente primeiro)
+  ].map((column) => ({ ...column, sortable: false, filterable: false, disableColumnMenu: true })), [theme, compact]);
+
+  const summaryText = (field) => {
+    if (summary.error) return "Indisponível";
+    return summary.value ? formatCurrency(summary.value[field]) : "—";
+  };
 
   if (status === "no-wallet") {
     return (
@@ -185,7 +213,7 @@ export default function Financas() {
   }
 
   return (
-    <Paper sx={{ p: { xs: 2, md: 3 }, display: "flex", flexDirection: "column", gap: 2.5 }}>
+    <Paper sx={{ p: { xs: 2, md: 3 }, display: "flex", flexDirection: "column", gap: 2.5, minWidth: 0 }}>
       <Box sx={{
         display: "flex", gap: 2, flexWrap: "wrap",
         alignItems: "flex-start", justifyContent: "space-between",
@@ -193,8 +221,8 @@ export default function Financas() {
         <PeriodFilter
           year={period.year}
           month={period.month}
-          onChange={setPeriod}
-          disabled={loading}
+          onChange={changePeriod}
+          disabled={listLoading}
         />
         {/* ml:auto mantém o botão à direita mesmo quando quebra de linha */}
         <Button variant="contained" sx={{ ml: "auto", height: 40 }} onClick={() => setEditor(opening(null))}>
@@ -203,39 +231,43 @@ export default function Financas() {
       </Box>
 
       <Box sx={{ display: "flex", gap: 2, flexDirection: { xs: "column", sm: "row" } }}>
-        <Paper variant="outlined" sx={{ flex: 1, p: 2 }}>
+        {/* enquanto recarrega, mantém os números anteriores esmaecidos em vez de piscar */}
+        <Paper variant="outlined" sx={{ flex: 1, p: 2, opacity: summaryLoading ? 0.6 : 1, transition: "opacity .2s" }}>
           <Typography variant="subtitle2" color="text.secondary">Total do período</Typography>
-          <Typography variant="h6">{formatCurrency(total)}</Typography>
+          <Typography variant="h6">{summaryText("balance")}</Typography>
         </Paper>
-        <Paper variant="outlined" sx={{ flex: 1, p: 2 }}>
+        <Paper variant="outlined" sx={{ flex: 1, p: 2, opacity: summaryLoading ? 0.6 : 1, transition: "opacity .2s" }}>
           <Typography variant="subtitle2" color="text.secondary">Média de gastos do período</Typography>
-          <Typography variant="h6">{formatCurrency(averageExpense)}</Typography>
+          <Typography variant="h6">{summaryText("averageExpense")}</Typography>
         </Paper>
       </Box>
 
-      {data.error ? (
+      {list.error ? (
         <Alert severity="error" action={<Button color="inherit" size="small" onClick={reload}>Tentar de novo</Button>}>
-          {data.error.message || "Não foi possível carregar os lançamentos."}
+          {list.error.message || "Não foi possível carregar os lançamentos."}
         </Alert>
-      ) : loading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
-          <CircularProgress />
-        </Box>
       ) : (
-        <DataGrid
-          autoHeight
-          density="compact"
-          columnHeaderHeight={40}
-          rowHeight={44}
-          rows={data.rows}
-          columns={columns}
-          localeText={dataGridLocale}
-          initialState={{ pagination: { paginationModel: { page: 0, pageSize: 10 } } }}
-          pageSizeOptions={[10, 25, 50]}
-          disableRowSelectionOnClick
-          sx={{ border: 0 }}
-          slotProps={{ noRowsOverlay: {} }}
-        />
+        // a rolagem horizontal, quando a tela é estreita, fica dentro da grade e não na página
+        <Box sx={{ width: "100%", minWidth: 0 }}>
+          <DataGrid
+            autoHeight
+            density="compact"
+            columnHeaderHeight={40}
+            rowHeight={44}
+            rows={list.rows}
+            columns={columns}
+            columnVisibilityModel={{ transactionType: !compact }}
+            localeText={dataGridLocale}
+            loading={listLoading}
+            paginationMode="server"
+            rowCount={list.total}
+            paginationModel={pagination}
+            onPaginationModelChange={setPagination}
+            pageSizeOptions={[10, 25, 50]}
+            disableRowSelectionOnClick
+            sx={{ border: 0 }}
+          />
+        </Box>
       )}
 
       <TransactionDialog

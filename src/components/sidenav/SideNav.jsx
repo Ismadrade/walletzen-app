@@ -19,7 +19,8 @@ function initialsOf(name) {
 }
 
 export default function Sidebar() {
-  const [open, setOpen] = useState(true);
+  // começa recolhido em telas estreitas, para o conteúdo não ficar espremido
+  const [open, setOpen] = useState(() => window.matchMedia("(min-width: 768px)").matches);
   const { darkMode, toggleDark } = useTheme();
   const { claims, logout } = useAuth();
   const { me } = useMe();

@@ -1,13 +1,23 @@
 import { request } from "./client";
 
 /**
- * Transações ativas do usuário, filtradas pela data do lançamento. O backend exige
- * `year` sempre que `month` for enviado; sem nenhum dos dois devolve o período inteiro.
- * Parâmetros vazios são descartados pelo client.
+ * Uma página das transações ativas do usuário, filtradas pela data do lançamento.
+ * O backend exige `year` sempre que `month` for enviado; sem nenhum dos dois devolve o
+ * período inteiro. Parâmetros vazios são descartados pelo client.
  */
-export function listByUser(userId, { page = 0, size = 100, year, month } = {}) {
+export function listByUser(userId, { page = 0, size = 10, year, month } = {}) {
   return request(`/financial/transactions/user/${userId}`, {
     params: { page, size, year, month },
+  });
+}
+
+/**
+ * Totais do período (`income`, `expense`, `balance`, `expenseCount`, `averageExpense`),
+ * calculados no backend — valem para o período todo, não só para a página exibida.
+ */
+export function summaryByUser(userId, { year, month } = {}) {
+  return request(`/financial/transactions/user/${userId}/summary`, {
+    params: { year, month },
   });
 }
 
